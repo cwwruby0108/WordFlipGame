@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>單字翻牌記憶遊戲</title>
+  
+  <!-- 引入 React 與 ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- 引入 Babel 來編譯 JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .preserve-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .perspective-1000 { perspective: 1000px; }
+  </style>
+</head>
+<body class="bg-indigo-50">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // 150 個單字庫
+    const wordDatabase = [
+      { id: 1, en: 'ball', zh: '球' }, { id: 2, en: 'baseball', zh: '棒球' }, { id: 3, en: 'basketball', zh: '籃球' },
+      { id: 4, en: 'morning', zh: '早上' }, { id: 5, en: 'afternoon', zh: '下午' }, { id: 6, en: 'evening', zh: '傍晚' },
+      { id: 7, en: 'climb', zh: '爬' }, { id: 8, en: 'dance', zh: '跳舞' }, { id: 9, en: 'draw', zh: '畫圖' },
+      { id: 10, en: 'exercise', zh: '運動' }, { id: 11, en: 'comic', zh: '漫畫書' }, { id: 12, en: 'fun', zh: '有趣' },
+      { id: 13, en: 'game', zh: '遊戲' }, { id: 14, en: 'doll', zh: '洋娃娃' }, { id: 15, en: 'interest', zh: '興趣' },
+      { id: 16, en: 'joy', zh: '喜悅' }, { id: 17, en: 'kite', zh: '風箏' }, { id: 18, en: 'movie', zh: '電影' },
+      { id: 19, en: 'music', zh: '音樂' }, { id: 20, en: 'paint', zh: '繪畫' }, { id: 21, en: 'piano', zh: '鋼琴' },
+      { id: 22, en: 'play', zh: '玩' }, { id: 23, en: 'player', zh: '選手' }, { id: 24, en: 'run', zh: '跑步' },
+      { id: 25, en: 'shop', zh: '購物' }, { id: 26, en: 'sing', zh: '唱歌' }, { id: 27, en: 'swim', zh: '游泳' },
+      { id: 28, en: 'song', zh: '歌' }, { id: 29, en: 'sport', zh: '運動' }, { id: 30, en: 'toy', zh: '玩具' },
+      { id: 31, en: 'win', zh: '贏' }, { id: 32, en: 'bathroom', zh: '廁所' }, { id: 33, en: 'bedroom', zh: '臥房' },
+      { id: 34, en: 'dining room', zh: '飯廳' }, { id: 35, en: 'home', zh: '家' }, { id: 36, en: 'house', zh: '房子' },
+      { id: 37, en: 'kitchen', zh: '廚房' }, { id: 38, en: 'living room', zh: '客廳' }, { id: 39, en: 'room', zh: '房間' },
+      { id: 40, en: 'study', zh: '學習' }, { id: 41, en: 'window', zh: '窗戶' }, { id: 42, en: 'bed', zh: '床' },
+      { id: 43, en: 'chair', zh: '椅子' }, { id: 44, en: 'desk', zh: '書桌' }, { id: 45, en: 'sofa', zh: '沙發' },
+      { id: 46, en: 'table', zh: '桌子' }, { id: 47, en: 'camera', zh: '相機' }, { id: 48, en: 'computer', zh: '電腦' },
+      { id: 49, en: 'friend', zh: '朋友' }, { id: 50, en: 'radio', zh: '收音機' }, { id: 51, en: 'telephone', zh: '電話' },
+      { id: 52, en: 'television', zh: '電視' }, { id: 53, en: 'video', zh: '錄影帶' }, { id: 54, en: 'blackboard', zh: '黑板' },
+      { id: 55, en: 'classroom', zh: '教室' }, { id: 56, en: 'elementary school', zh: '國小' }, { id: 57, en: 'grade', zh: '年級' },
+      { id: 58, en: 'school', zh: '學校' }, { id: 59, en: 'book', zh: '書' }, { id: 60, en: 'dictionary', zh: '字典' },
+      { id: 61, en: 'eraser', zh: '橡皮擦' }, { id: 62, en: 'paper', zh: '紙' }, { id: 63, en: 'pen', zh: '筆' },
+      { id: 64, en: 'pencil', zh: '鉛筆' }, { id: 65, en: 'ruler', zh: '尺' }, { id: 66, en: 'tape', zh: '膠帶' },
+      { id: 67, en: 'workbook', zh: '習作本' }, { id: 68, en: 'art', zh: '藝術' }, { id: 69, en: 'class', zh: '課' },
+      { id: 70, en: 'math', zh: '數學' }, { id: 71, en: 'PE', zh: '體育課' }, { id: 72, en: 'ask', zh: '問' },
+      { id: 73, en: 'correct', zh: '正確的' }, { id: 74, en: 'answer', zh: '答案' }, { id: 75, en: 'copy', zh: '抄寫' },
+      { id: 76, en: 'grade', zh: '成績' }, { id: 77, en: 'homework', zh: '回家功課' }, { id: 78, en: 'learn', zh: '學習' },
+      { id: 79, en: 'practice', zh: '練習' }, { id: 80, en: 'question', zh: '問題' }, { id: 81, en: 'read', zh: '閱讀' },
+      { id: 82, en: 'repeat', zh: '重複' }, { id: 83, en: 'spell', zh: '拼字' }, { id: 84, en: 'unit', zh: '單元' },
+      { id: 85, en: 'teach', zh: '教導' }, { id: 86, en: 'test', zh: '考試' }, { id: 87, en: 'quiz', zh: '測驗' },
+      { id: 88, en: 'understand', zh: '理解' }, { id: 89, en: 'write', zh: '寫' }, { id: 90, en: 'airport', zh: '機場' },
+      { id: 91, en: 'bakery', zh: '麵包店' }, { id: 92, en: 'bank', zh: '銀行' }, { id: 93, en: 'bookstore', zh: '書店' },
+      { id: 94, en: 'student', zh: '學生' }, { id: 95, en: 'department store', zh: '百貨公司' }, { id: 96, en: 'hospital', zh: '醫院' },
+      { id: 97, en: 'internet', zh: '網路' }, { id: 98, en: 'library', zh: '圖書館' }, { id: 99, en: 'office', zh: '辦公室' },
+      { id: 100, en: 'park', zh: '公園' }, { id: 101, en: 'place', zh: '地方' }, { id: 102, en: 'post office', zh: '郵局' },
+      { id: 103, en: 'restaurant', zh: '餐廳' }, { id: 104, en: 'restroom', zh: '廁所' }, { id: 105, en: 'road', zh: '馬路' },
+      { id: 106, en: 'shop', zh: '商店' }, { id: 107, en: 'station', zh: '車站' }, { id: 108, en: 'store', zh: '店家' },
+      { id: 109, en: 'street', zh: '街道' }, { id: 110, en: 'supermarket', zh: '超級市場' }, { id: 111, en: 'theater', zh: '戲院' },
+      { id: 112, en: 'zoo', zh: '動物園' }, { id: 113, en: 'tall', zh: '高的' }, { id: 114, en: 'thin', zh: '瘦的' },
+      { id: 115, en: 'front', zh: '前面的' }, { id: 116, en: 'here', zh: '這裡' }, { id: 117, en: 'left', zh: '左邊' },
+      { id: 118, en: 'right', zh: '右邊' }, { id: 119, en: 'there', zh: '那裡' }, { id: 120, en: 'airplane', zh: '飛機' },
+      { id: 121, en: 'bicycle', zh: '腳踏車' }, { id: 122, en: 'boat', zh: '小船' }, { id: 123, en: 'bus', zh: '公車' },
+      { id: 124, en: 'car', zh: '汽車' }, { id: 125, en: 'taxi', zh: '計程車' }, { id: 126, en: 'motorcycle', zh: '摩托車' },
+      { id: 127, en: 'van', zh: '廂型車' }, { id: 128, en: 'train', zh: '火車' }, { id: 129, en: 'truck', zh: '貨車' },
+      { id: 130, en: 'drive', zh: '駕駛' }, { id: 131, en: 'fly', zh: '飛翔' }, { id: 132, en: 'map', zh: '地圖' },
+      { id: 133, en: 'ride', zh: '騎乘' }, { id: 134, en: 'turn', zh: '轉' }, { id: 135, en: 'basket', zh: '籃子' },
+      { id: 136, en: 'box', zh: '箱子' }, { id: 137, en: 'can', zh: '罐' }, { id: 138, en: 'piece', zh: '張,塊' },
+      { id: 139, en: 'point', zh: '分數' }, { id: 140, en: 'big', zh: '大的' }, { id: 141, en: 'enough', zh: '足夠的' },
+      { id: 142, en: 'medium', zh: '中間的' }, { id: 143, en: 'high', zh: '高的' }, { id: 144, en: 'low', zh: '低的' },
+      { id: 145, en: 'full', zh: '滿的' }, { id: 146, en: 'short', zh: '短的' }, { id: 147, en: 'small', zh: '小的' },
+      { id: 148, en: 'line', zh: '隊伍,列' }, { id: 149, en: 'America', zh: '美國' }, { id: 150, en: 'American', zh: '美國的' }
+    ];
+
+    function App() {
+      const [cards, setCards] = useState([]);
+      const [flippedIndices, setFlippedIndices] = useState([]);
+      const [matchedIds, setMatchedIds] = useState([]);
+      const [attempts, setAttempts] = useState(0);
+      const [pairCount, setPairCount] = useState(8); 
+      const [isGameWon, setIsGameWon] = useState(false);
+      const [isProcessing, setIsProcessing] = useState(false);
+
+      const shuffleArray = (array) => {
+        const newArr = [...array];
+        for (let i = newArr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+        }
+        return newArr;
+      };
+
+      const initializeGame = () => {
+        const shuffledDB = shuffleArray(wordDatabase);
+        const selectedPairs = shuffledDB.slice(0, pairCount);
+
+        let gameCards = [];
+        selectedPairs.forEach(pair => {
+          gameCards.push({ uniqueId: `${pair.id}-en`, pairId: pair.id, text: pair.en, type: 'en' });
+          gameCards.push({ uniqueId: `${pair.id}-zh`, pairId: pair.id, text: pair.zh, type: 'zh' });
+        });
+
+        gameCards = shuffleArray(gameCards);
+        setCards(gameCards);
+        setFlippedIndices([]);
+        setMatchedIds([]);
+        setAttempts(0);
+        setIsGameWon(false);
+        setIsProcessing(false);
+      };
+
+      useEffect(() => {
+        initializeGame();
+      }, [pairCount]);
+
+      const handleCardClick = (index) => {
+        if (
+          isProcessing ||
+          flippedIndices.includes(index) ||
+          matchedIds.includes(cards[index].pairId)
+        ) {
+          return;
+        }
+
+        const newFlippedIndices = [...flippedIndices, index];
+        setFlippedIndices(newFlippedIndices);
+
+        if (newFlippedIndices.length === 2) {
+          setIsProcessing(true);
+          setAttempts(prev => prev + 1);
+
+          const firstCard = cards[newFlippedIndices[0]];
+          const secondCard = cards[newFlippedIndices[1]];
+
+          if (firstCard.pairId === secondCard.pairId) {
+            setMatchedIds(prev => {
+              const newMatched = [...prev, firstCard.pairId];
+              if (newMatched.length === pairCount) {
+                setTimeout(() => setIsGameWon(true), 500);
+              }
+              return newMatched;
+            });
+            setFlippedIndices([]);
+            setIsProcessing(false);
+          } else {
+            setTimeout(() => {
+              setFlippedIndices([]);
+              setIsProcessing(false);
+            }, 1000);
+          }
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col items-center py-8 px-4 text-gray-800">
+          <div className="max-w-4xl w-full">
+            
+            {/* Header 區塊 */}
+            <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-indigo-600 mb-2 flex items-center">
+                  <svg className="mr-2 text-yellow-500" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                  單字記憶翻翻牌
+                </h1>
+                <p className="text-gray-500">找出正確的中英文配對！</p>
+              </div>
+              
+              <div className="flex items-center gap-6 mt-4 md:mt-0 text-lg">
+                <div className="text-center">
+                  <span className="block text-sm text-gray-400 font-semibold uppercase tracking-wider">翻牌次數</span>
+                  <span className="font-bold text-2xl text-indigo-500">{attempts}</span>
+                </div>
+                <div className="text-center">
+                  <span className="block text-sm text-gray-400 font-semibold uppercase tracking-wider">已配對</span>
+                  <span className="font-bold text-2xl text-green-500">{matchedIds.length} / {pairCount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 控制面板 */}
+            <div className="flex flex-wrap gap-4 mb-6 justify-center">
+              <button 
+                onClick={initializeGame}
+                className="flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all shadow-md active:scale-95 font-medium"
+              >
+                <svg className="mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                重新開始
+              </button>
+              
+              <div className="flex items-center bg-white px-4 py-2 rounded-full shadow-sm">
+                <svg className="text-gray-400 mr-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                <label className="text-sm font-medium mr-2">卡片數量:</label>
+                <select 
+                  value={pairCount} 
+                  onChange={(e) => setPairCount(Number(e.target.value))}
+                  className="bg-gray-100 rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-300 transition-shadow"
+                >
+                  <option value={6}>12 張 (簡單)</option>
+                  <option value={8}>16 張 (適中)</option>
+                  <option value={10}>20 張 (挑戰)</option>
+                  <option value={12}>24 張 (困難)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 遊戲區塊 */}
+            <div className={`grid gap-3 md:gap-4 mx-auto`} 
+                 style={{ 
+                   gridTemplateColumns: `repeat(auto-fit, minmax(${pairCount > 10 ? '100px' : '120px'}, 1fr))`,
+                   maxWidth: pairCount > 10 ? '800px' : '600px'
+                 }}>
+              {cards.map((card, index) => {
+                const isFlipped = flippedIndices.includes(index);
+                const isMatched = matchedIds.includes(card.pairId);
+                
+                return (
+                  <div 
+                    key={card.uniqueId}
+                    onClick={() => handleCardClick(index)}
+                    className={`relative w-full aspect-[4/3] md:aspect-square cursor-pointer transition-all duration-300 transform perspective-1000 ${isMatched ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100'}`}
+                  >
+                    <div 
+                      className="w-full h-full relative preserve-3d transition-transform duration-500"
+                      style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+                    >
+                      {/* 卡片背面 */}
+                      <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl shadow-md border-2 border-white/20 flex items-center justify-center hover:shadow-lg transition-shadow">
+                        <span className="text-white text-3xl opacity-30 font-bold">?</span>
+                      </div>
+                      
+                      {/* 卡片正面 */}
+                      <div 
+                        className={`absolute w-full h-full backface-hidden rounded-xl shadow-md border-2 flex items-center justify-center p-2 text-center
+                          ${card.type === 'en' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-orange-50 border-orange-200 text-orange-700'}`}
+                        style={{ transform: 'rotateY(180deg)' }}
+                      >
+                        <span className={`${card.text.length > 8 ? 'text-sm md:text-base' : 'text-lg md:text-xl'} font-bold break-words w-full`}>
+                          {card.text}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 過關畫面 */}
+            {isGameWon && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 transition-opacity">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl transform scale-100 transition-transform">
+                  <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="text-yellow-500" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                  </div>
+                  <h2 className="text-3xl font-extrabold text-gray-800 mb-2">太棒了！</h2>
+                  <p className="text-gray-600 mb-6">
+                    你只用了 <strong className="text-indigo-600 text-xl">{attempts}</strong> 次<br/>
+                    就成功配對所有單字！
+                  </p>
+                  <button 
+                    onClick={initializeGame}
+                    className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all active:scale-95"
+                  >
+                    再來一局
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
