@@ -189,7 +189,7 @@
               setIsTimerRunning(false);
             }
             
-            // 停留 3 秒（3000毫秒）後再讓卡片消失
+            // 停留 1 秒（1000毫秒）後再讓卡片消失
             setTimeout(() => {
               setMatchedIds(prev => {
                 const newMatched = [...prev, firstCard.pairId];
@@ -200,7 +200,7 @@
               });
               setFlippedIndices([]);
               setIsProcessing(false);
-            }, 3000);
+            }, 1000);
           } else {
             setTimeout(() => {
               setFlippedIndices([]);
