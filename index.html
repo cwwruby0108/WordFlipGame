@@ -277,6 +277,27 @@
                 const isFlipped = flippedIndices.includes(index);
                 const isMatched = matchedIds.includes(card.pairId);
                 
+                // 處理片語換行 (透過空白字元分割)
+                const textParts = card.text.split(' ');
+                
+                // 依照卡片數量和文字長度決定字體大小
+                const maxWordLen = Math.max(...textParts.map(w => w.length));
+                let fontSizeClass = '';
+                
+                if (pairCount >= 12) { // 24 張或 32 張模式
+                  if (maxWordLen > 8) {
+                    fontSizeClass = 'text-sm sm:text-base md:text-xl';
+                  } else {
+                    fontSizeClass = 'text-base sm:text-xl md:text-2xl';
+                  }
+                } else { // 12 張、16 張、20 張模式
+                  if (maxWordLen > 8) {
+                    fontSizeClass = 'text-lg sm:text-xl md:text-2xl';
+                  } else {
+                    fontSizeClass = 'text-xl sm:text-2xl md:text-3xl';
+                  }
+                }
+                
                 return (
                   <div 
                     key={card.uniqueId}
@@ -293,13 +314,15 @@
                       
                       {/* 卡片正面 */}
                       <div 
-                        className={`absolute w-full h-full backface-hidden rounded-xl shadow-md border-2 flex items-center justify-center p-1 md:p-2 text-center
+                        className={`absolute w-full h-full backface-hidden rounded-xl shadow-md border-2 flex flex-col items-center justify-center p-1 sm:p-2 text-center
                           ${card.type === 'en' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-orange-50 border-orange-200 text-orange-700'}`}
                         style={{ transform: 'rotateY(180deg)' }}
                       >
-                        <span className={`${card.text.length > 8 ? 'text-[10px] md:text-sm leading-tight' : (pairCount === 12 || pairCount === 16) ? 'text-sm md:text-lg' : 'text-lg md:text-xl'} font-bold break-words w-full`}>
-                          {card.text}
-                        </span>
+                        <div className={`w-full ${fontSizeClass} font-bold flex flex-col items-center justify-center leading-tight`}>
+                          {textParts.map((part, i) => (
+                            <span key={i} className="block w-full truncate whitespace-normal break-words">{part}</span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
