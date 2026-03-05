@@ -262,7 +262,7 @@
                   <option value={8}>16 張 (適中)</option>
                   <option value={10}>20 張 (挑戰)</option>
                   <option value={12}>24 張 (困難)</option>
-                  <option value={15}>30 張 (極難)</option>
+                  <option value={16}>32 張 (極難)</option>
                 </select>
               </div>
             </div>
@@ -270,8 +270,8 @@
             {/* 遊戲區塊 */}
             <div className={`grid gap-2 md:gap-3 mx-auto`} 
                  style={{ 
-                   gridTemplateColumns: `repeat(auto-fit, minmax(${pairCount >= 15 ? '80px' : pairCount > 10 ? '100px' : '120px'}, 1fr))`,
-                   maxWidth: pairCount >= 15 ? '1000px' : pairCount > 10 ? '800px' : '600px'
+                   gridTemplateColumns: `repeat(auto-fit, minmax(${pairCount >= 16 ? '80px' : pairCount > 10 ? '100px' : '120px'}, 1fr))`,
+                   maxWidth: pairCount >= 16 ? '1000px' : pairCount > 10 ? '800px' : '600px'
                  }}>
               {cards.map((card, index) => {
                 const isFlipped = flippedIndices.includes(index);
@@ -297,7 +297,7 @@
                           ${card.type === 'en' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-orange-50 border-orange-200 text-orange-700'}`}
                         style={{ transform: 'rotateY(180deg)' }}
                       >
-                        <span className={`${card.text.length > 8 ? 'text-xs md:text-sm' : pairCount >= 15 ? 'text-sm md:text-base' : 'text-lg md:text-xl'} font-bold break-words w-full`}>
+                        <span className={`${card.text.length > 8 ? 'text-xs md:text-sm' : pairCount >= 16 ? 'text-sm md:text-base' : 'text-lg md:text-xl'} font-bold break-words w-full`}>
                           {card.text}
                         </span>
                       </div>
