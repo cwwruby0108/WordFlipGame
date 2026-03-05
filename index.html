@@ -88,6 +88,37 @@
       const [pairCount, setPairCount] = useState(8); 
       const [isGameWon, setIsGameWon] = useState(false);
       const [isProcessing, setIsProcessing] = useState(false);
+      const [timeElapsed, setTimeElapsed] = useState(0);
+      const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+      // 計時器 Effect
+      useEffect(() => {
+        let interval;
+        if (isTimerRunning) {
+          interval = setInterval(() => {
+            setTimeElapsed(prev => prev + 1);
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [isTimerRunning]);
+
+      // 時間格式化
+      const formatTime = (seconds) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      };
+
+      // 發音功能：使用瀏覽器內建的 Web Speech API
+      const speakWord = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel(); // 停止正在播放的聲音，避免連點時聲音重疊
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'en-US'; // 設定為美式發音
+          utterance.rate = 0.9; // 稍微放慢語速，讓學生聽得更清楚
+          window.speechSynthesis.speak(utterance);
+        }
+      };
 
       const shuffleArray = (array) => {
         const newArr = [...array];
@@ -115,6 +146,8 @@
         setAttempts(0);
         setIsGameWon(false);
         setIsProcessing(false);
+        setTimeElapsed(0);
+        setIsTimerRunning(false);
       };
 
       useEffect(() => {
@@ -130,6 +163,16 @@
           return;
         }
 
+        // 開始計時
+        if (!isTimerRunning) {
+          setIsTimerRunning(true);
+        }
+
+        // 如果點擊的是英文卡片，就自動念出單字
+        if (cards[index].type === 'en') {
+          speakWord(cards[index].text);
+        }
+
         const newFlippedIndices = [...flippedIndices, index];
         setFlippedIndices(newFlippedIndices);
 
@@ -141,15 +184,23 @@
           const secondCard = cards[newFlippedIndices[1]];
 
           if (firstCard.pairId === secondCard.pairId) {
-            setMatchedIds(prev => {
-              const newMatched = [...prev, firstCard.pairId];
-              if (newMatched.length === pairCount) {
-                setTimeout(() => setIsGameWon(true), 500);
-              }
-              return newMatched;
-            });
-            setFlippedIndices([]);
-            setIsProcessing(false);
+            // 配對成功：如果這是最後一對，先停止計時
+            if (matchedIds.length + 1 === pairCount) {
+              setIsTimerRunning(false);
+            }
+            
+            // 停留 3 秒（3000毫秒）後再讓卡片消失
+            setTimeout(() => {
+              setMatchedIds(prev => {
+                const newMatched = [...prev, firstCard.pairId];
+                if (newMatched.length === pairCount) {
+                  setTimeout(() => setIsGameWon(true), 500);
+                }
+                return newMatched;
+              });
+              setFlippedIndices([]);
+              setIsProcessing(false);
+            }, 3000);
           } else {
             setTimeout(() => {
               setFlippedIndices([]);
@@ -174,6 +225,10 @@
               </div>
               
               <div className="flex items-center gap-6 mt-4 md:mt-0 text-lg">
+                <div className="text-center">
+                  <span className="block text-sm text-gray-400 font-semibold uppercase tracking-wider">花費時間</span>
+                  <span className="font-bold text-2xl text-blue-500">{formatTime(timeElapsed)}</span>
+                </div>
                 <div className="text-center">
                   <span className="block text-sm text-gray-400 font-semibold uppercase tracking-wider">翻牌次數</span>
                   <span className="font-bold text-2xl text-indigo-500">{attempts}</span>
@@ -207,15 +262,16 @@
                   <option value={8}>16 張 (適中)</option>
                   <option value={10}>20 張 (挑戰)</option>
                   <option value={12}>24 張 (困難)</option>
+                  <option value={15}>30 張 (極難)</option>
                 </select>
               </div>
             </div>
 
             {/* 遊戲區塊 */}
-            <div className={`grid gap-3 md:gap-4 mx-auto`} 
+            <div className={`grid gap-2 md:gap-3 mx-auto`} 
                  style={{ 
-                   gridTemplateColumns: `repeat(auto-fit, minmax(${pairCount > 10 ? '100px' : '120px'}, 1fr))`,
-                   maxWidth: pairCount > 10 ? '800px' : '600px'
+                   gridTemplateColumns: `repeat(auto-fit, minmax(${pairCount >= 15 ? '80px' : pairCount > 10 ? '100px' : '120px'}, 1fr))`,
+                   maxWidth: pairCount >= 15 ? '1000px' : pairCount > 10 ? '800px' : '600px'
                  }}>
               {cards.map((card, index) => {
                 const isFlipped = flippedIndices.includes(index);
@@ -233,16 +289,15 @@
                     >
                       {/* 卡片背面 */}
                       <div className="absolute w-full h-full backface-hidden bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl shadow-md border-2 border-white/20 flex items-center justify-center hover:shadow-lg transition-shadow">
-                        <span className="text-white text-3xl opacity-30 font-bold">?</span>
                       </div>
                       
                       {/* 卡片正面 */}
                       <div 
-                        className={`absolute w-full h-full backface-hidden rounded-xl shadow-md border-2 flex items-center justify-center p-2 text-center
+                        className={`absolute w-full h-full backface-hidden rounded-xl shadow-md border-2 flex items-center justify-center p-1 md:p-2 text-center
                           ${card.type === 'en' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-orange-50 border-orange-200 text-orange-700'}`}
                         style={{ transform: 'rotateY(180deg)' }}
                       >
-                        <span className={`${card.text.length > 8 ? 'text-sm md:text-base' : 'text-lg md:text-xl'} font-bold break-words w-full`}>
+                        <span className={`${card.text.length > 8 ? 'text-xs md:text-sm' : pairCount >= 15 ? 'text-sm md:text-base' : 'text-lg md:text-xl'} font-bold break-words w-full`}>
                           {card.text}
                         </span>
                       </div>
@@ -260,8 +315,9 @@
                     <svg className="text-yellow-500" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                   </div>
                   <h2 className="text-3xl font-extrabold text-gray-800 mb-2">太棒了！</h2>
-                  <p className="text-gray-600 mb-6">
-                    你只用了 <strong className="text-indigo-600 text-xl">{attempts}</strong> 次<br/>
+                  <p className="text-gray-600 mb-6 text-lg">
+                    你只用了 <strong className="text-indigo-600 text-2xl">{attempts}</strong> 次<br/>
+                    花費了 <strong className="text-indigo-600 text-2xl">{formatTime(timeElapsed)}</strong><br/>
                     就成功配對所有單字！
                   </p>
                   <button 
